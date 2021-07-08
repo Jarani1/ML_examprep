@@ -124,8 +124,34 @@ ggplot(six_df, aes(x = thetas, y = theta_like_six)) +
 thetas[which(theta_like_six == max(theta_like_six))]
 
 #4 Bayesian model
-lambda_prior = 10
-log_prior = log(lambda_prior) - theta * sum(x)
+# constants will be left out given the proportionality sign in bayesian inference assuming p(theta|data) prop. p(x|theta) * p(theta)
 
+bayesian <- function(thetas, lambda, data){
+  probs = double(length(thetas))
+  c = 1
+  x = data
+  n = length(x)
+  for(theta in thetas){
+    log_prior = - lambda * theta
+    log_like = n*log(theta) - theta * sum(x) 
+    probs[c] = log_like + log_prior
+    c = c + 1
+  }
+  return(probs)
+}
+
+
+probs = bayesian(thetas, 10, data$Length)
+
+plot(probs)
+
+thetas[which(probs == max(probs))]
+
+
+#5 generate new obs
+
+hist(rexp(50, rate = 1.13))
+
+hist(data$Length)
 ```
 
