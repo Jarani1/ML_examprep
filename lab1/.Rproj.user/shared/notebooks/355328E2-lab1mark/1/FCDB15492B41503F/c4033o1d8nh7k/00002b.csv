@@ -1,0 +1,7 @@
+"0","# most likely theta
+thetas[which(theta_like_six == max(theta_like_six))]
+"
+"1","[1]"
+"1"," 1.79"
+"1","
+"

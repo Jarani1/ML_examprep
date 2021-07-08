@@ -1,0 +1,69 @@
+---
+title: "R Notebook"
+output:
+  pdf_document: default
+  html_notebook: default
+editor_options:
+  chunk_output_type: inline
+---
+
+
+### Assignment 1 spam classification with nearest neighbors
+
+
+
+```{r assignment 1}
+library(kknn)
+
+data = read.csv("spambase.csv")
+
+#1 divide data
+
+n=dim(data)[1]
+set.seed(12345)
+id=sample(1:n, floor(n*0.5))
+train=data[id,]
+test=data[-id,]
+
+#use logistic reg to classify
+# the . means all variables not already mentioned in the formula 
+#https://stackoverflow.com/questions/5251507/how-to-succinctly-write-a-formula-with-many-variables-from-a-data-frame
+lr_model = glm(Spam ~ ., family = "binomial", data = train)
+
+evalfunc <- function(model, data, threshold){
+  preds = predict(model, type="response")
+  preds = as.integer(preds > threshold)
+  confusion = table(preds, data)
+  misclass = 1 - sum(diag(confusion)) /
+    sum(confusion)
+  print(confusion)
+  print(misclass)
+}
+evalfunckknn <- function(preds, data, threshold){
+  preds = as.integer(preds > threshold)
+  confusion = table(preds, data)
+  misclass = 1 - sum(diag(confusion)) /
+    sum(confusion)
+  print(confusion)
+  print(misclass)
+}
+#2
+# train/test 0.5
+evalfunc(lr_model, train$Spam, 0.5)
+evalfunc(lr_model, test$Spam, 0.5)
+
+#3
+# train/test 0.8
+evalfunc(lr_model, train$Spam, 0.8)
+evalfunc(lr_model, test$Spam, 0.8)
+
+#4
+kk = kknn(Spam ~ ., k = 30, train = train, test = train)
+
+evalfunckknn(res$fitted.values, train$Spam, 0.5)
+
+
+```
+```{r assignment 2}
+```
+

@@ -1,0 +1,27 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1625482705422.000,
+    "dirty" : true,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "D6DE9D34",
+    "lastKnownWriteTime" : 1625602239,
+    "last_content_update" : 1625695984330,
+    "path" : "~/Documents/TDDE01/lab1/lab1mark.Rmd",
+    "project_path" : "lab1mark.Rmd",
+    "properties" : {
+        "chunk_output_type" : "inline",
+        "cursorPosition" : "126,2",
+        "scrollLine" : "114",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

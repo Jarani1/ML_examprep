@@ -1,0 +1,131 @@
+---
+title: "R Notebook"
+output:
+  pdf_document: default
+  html_notebook: default
+editor_options:
+  chunk_output_type: inline
+---
+
+
+### Assignment 1 spam classification with nearest neighbors
+
+
+
+```{r assignment 1}
+library(kknn)
+
+data = read.csv("spambase.csv")
+
+#1 divide data
+
+n=dim(data)[1]
+set.seed(12345)
+id=sample(1:n, floor(n*0.5))
+train=data[id,]
+test=data[-id,]
+
+#use logistic reg to classify
+# the . means all variables not already mentioned in the formula 
+#https://stackoverflow.com/questions/5251507/how-to-succinctly-write-a-formula-with-many-variables-from-a-data-frame
+lr_model = glm(Spam ~ ., family = "binomial", data = train)
+
+evalfunc <- function(model, data, threshold){
+  preds = predict(model, type="response")
+  preds = as.integer(preds > threshold)
+  confusion = table(preds, data)
+  misclass = 1 - sum(diag(confusion)) /
+    sum(confusion)
+  print(confusion)
+  print(misclass)
+}
+evalfunckknn <- function(preds, data, threshold){
+  preds = as.integer(preds > threshold)
+  confusion = table(preds, data)
+  misclass = 1 - sum(diag(confusion)) /
+    sum(confusion)
+  print(confusion)
+  print(misclass)
+}
+#2
+# train/test 0.5
+evalfunc(lr_model, train$Spam, 0.5)
+evalfunc(lr_model, test$Spam, 0.5)
+
+#3
+# train/test 0.8
+evalfunc(lr_model, train$Spam, 0.8)
+evalfunc(lr_model, test$Spam, 0.8)
+
+#4 k = 30
+kk_train = kknn(Spam ~ ., k = 30, train = train, test = train)
+kk_test = kknn(Spam ~ ., k = 30, train = train, test = test)
+
+
+evalfunckknn(kk_train$fitted.values, train$Spam, 0.5)
+evalfunckknn(kk_test$fitted.values, test$Spam, 0.5)
+
+# k = 1
+kk_train = kknn(Spam ~ ., k = 1, train = train, test = train)
+kk_test = kknn(Spam ~ ., k = 1, train = train, test = test)
+
+evalfunckknn(kk_train$fitted.values, train$Spam, 0.5)
+evalfunckknn(kk_test$fitted.values, test$Spam, 0.5)
+
+```
+```{r assignment 2}
+library(ggplot2)
+#1 import data
+data = read.csv("machines.csv")
+
+ggplot(data, aes(x=Length)) + geom_density()
+#
+
+log_like <-function(theta, x){
+  n = length(x)
+  return( n*log(theta) - theta * sum(x))
+} 
+
+thetas = seq(0,10,0.01)
+
+theta_likelihoods = double(length(thetas))
+
+counter = 1
+for (theta in thetas){
+  theta_likelihoods[counter] = log_like(theta,
+                                        data$Length)
+  counter = counter + 1
+}
+
+df_like <- data.frame(theta_likelihoods)
+
+ggplot(df_like, aes(x = thetas, y = theta_likelihoods)) + geom_line()
+
+# most likely theta
+thetas[which(theta_likelihoods == max(theta_likelihoods))]
+
+#3
+only_six = data$Length[1:6]
+theta_like_six = double(6)
+c=1
+for (theta in thetas){
+  theta_like_six[c] = log_like(theta,only_six)
+  c = c + 1
+}
+
+six_df <- data.frame(theta_like_six)
+
+ggplot(six_df, aes(x = thetas, y = theta_like_six)) +
+  geom_line()
+
+# most likely theta
+thetas[which(theta_like_six == max(theta_like_six))]
+
+#4 Bayesian model
+lambda_prior = 10
+log_prior = log(lambda_prior) - theta * sum(x)
+  
+
+
+```
+

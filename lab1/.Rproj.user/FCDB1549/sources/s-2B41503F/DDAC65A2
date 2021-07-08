@@ -1,0 +1,33 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1625656606864.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "DDAC65A2",
+    "lastKnownWriteTime" : 1625602239,
+    "last_content_update" : 1625656606864,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "D6B6B3BA",
+        "caption" : "six_df",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=six_df&cache_key=D6B6B3BA",
+        "displayedObservations" : 1001,
+        "environment" : "",
+        "expression" : "six_df",
+        "object" : "six_df",
+        "preview" : 0,
+        "totalObservations" : 1001,
+        "variables" : 1
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 8,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}
