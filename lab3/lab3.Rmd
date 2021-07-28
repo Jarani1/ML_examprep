@@ -12,11 +12,116 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r Assignment 1}
+
 library("geosphere")
 
 stations = read.csv("stations.csv")
+temps = read.csv("temps50k.csv")
+
+# kernels
+
+# forecast
+set.seed(1234567890)
 
 
+st <- merge(stations,temps,by="station_number")
+
+h_distance <- 50
+h_date <- 15
+h_time <- 4
+
+a <- 58.4034 
+b <- 15.6001
+
+target_date <- as.Date("2012-08-25") # The date to predict (up to the students)
+target_time = "18:00:00"
+times <- c("04:00:00", "06:00:00", "08:00:00", "10:00:00", "12:00:00", "14:00:00", "16:00:00",
+           "18:00:00", "20:00:00", "22:00:00", "24:00:00")
+temp <- vector(length=length(times))
+
+# Students’ code here
+
+# filter data 
+
+filtered_dates = st[as.Date(st$date) < target_date, ] # time also solved since < and not <= 
+
+#kernel1
+distance_kernel <- function(lat, long, h){
+  p1 = c(lat,long)
+  p2 = c(a,b)
+  u = distHaversine(p1,p2) / h
+  return(exp(-u^2))
+}
+
+#kernel2
+day_kernel <- function(measured_day, target_day, h){
+  measured_day = as.integer(format(measured_day, format = "%j"))
+  target_day = as.integer(format(target_day, format = "%j"))
+  u = abs(measured_day - target_day) / h
+  return(exp(-u^2))
+}
+
+#kernel3
+time_kernel <- function(measured_time, target_time,h){
+  mt = as.numeric(strsplit(measured_time, ":")[[1]][1])
+  tt = as.numeric(strsplit(target_time, ":")[[1]][1])
+  if(abs(mt - tt) >= 12){
+    u = 12 - (abs(mt - tt) %% 12)
+  }else{
+    u = abs(mt - tt) %% 12
+  }
+  print(u)
+  return(exp(-u^2))
+}
+
+#plot distance
+# calc distances, get value for those 
+# sort on distances and plot 
+distance_matrix = matrix(0, nrow=length(filtered_dates$latitude), ncol = 2)
+colnames(distance_matrix) = c("distance","value")
+for(row in 1:nrow(filtered_dates)){
+  lat = as.numeric(filtered_dates[row,][4])
+  long = as.numeric(filtered_dates[row,][5])
+  point = c(lat,long)
+  target = c(a,b)
+  distance_matrix[row,1] = distHaversine(point,target)
+  distance_matrix[row,2] = distance_kernel(lat,long, 100000)
+}
+
+plot(distance_matrix[,1], distance_matrix[,2])
+
+
+# plot day
+plot_day <- function(){
+  day_matrix = matrix(0, nrow = 366, ncol = 1)
+  for(date in filtered_dates$date){
+    date = as.Date(date)
+    day = as.integer(format(date, format = "%j"))
+    day_matrix[day,] = day_kernel(date, target_date, 50)
+  }
+  plot(day_matrix[,1])
+}
+
+
+#plot time 
+
+vec = double(length(times))
+i = 1
+for(time in times){
+  t = time_kernel(time, target_time, 4)
+  vec[i] = t
+  i = i + 1
+}
+
+plot(vec, type="l")
+
+plot(temp, type="o")
+
+# sum kernels
+
+for(row in 1:nrow(filtered_dates)){
+  
+}
 
 ```
 
