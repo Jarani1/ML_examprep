@@ -1,0 +1,242 @@
+---
+title: "lab2mark"
+author: "Shahin Salehi"
+date: "7/20/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r Assignment 1}
+library("ggplot2")
+library("MASS")
+data = read.csv("australian-crabs.csv")
+
+# plot and color by sex
+ggplot(data, aes(x = CL, y = RW, color = sex)) + geom_point() # they look linearly seperable
+
+# task 2
+l = lda(sex ~ CL + RW,  data = data)
+
+lda_predict = predict(l)
+
+lda_predict$class == data$sex
+
+# task 3
+
+l_prior = lda(sex ~ CL + RW,  prior = c(0.9, 0.1), data = data) # prior 
+
+lda_prior_predict = predict(l_prior)
+
+lda_prior_predict$class == data$sex
+
+
+# task 4
+
+lr = glm(sex ~ CL + RW, data, family = "binomial")
+
+
+convert = ifelse(lda_predict$class %in% c("Male", "Female"), 1,0)
+convert ==lr$y 
+
+```
+
+
+
+```{r Assignment 2}
+library("tree")
+library("MASS")
+library("e1071")
+library("ggplot2")
+library("reshape2")
+
+data = read.csv2("creditscoring.csv")
+
+n=dim(data)[1]
+set.seed(12345)
+id=sample(1:n, floor(n*0.4))
+train=data[id,] 
+
+id1=setdiff(1:n, id)
+set.seed(12345) 
+id2=sample(id1, floor(n*0.3)) 
+valid=data[id2,]
+
+id3=setdiff(id1,id2)
+test=data[id3,] 
+
+t = tree(good_bad ~ ., data = train, split = c("deviance"))
+
+plot(t)
+text(t, pretty=0)
+
+yfit = predict(t, newdata = valid, type = "class")
+
+conf = table(valid$good_bad, yfit)
+miss_rate = 1 - (sum(diag(conf)) / sum(conf))
+miss_rate
+
+cv_tree = cv.tree(t)
+
+plot(cv_tree$size, cv_tree$dev, type = "b", col = "red")
+
+
+plot(log(cv_tree$k), cv_tree$dev, type = "b", col = "red")
+
+train_score = numeric(9)
+test_score = numeric(9)
+for( i in 2:9){
+  pruned_tree = prune.tree(t, best=i)
+  pred = predict(pruned_tree, newdata = valid, type="tree")
+  train_score[i] = deviance(pruned_tree)
+  test_score[i] = deviance(pred)
+}
+
+
+plot(2:9, train_score[2:9], ylim = c(0,500), type = "b")
+points(2:9, test_score[2:9], type="b", col="blue")
+train_score
+
+final = prune.tree(t, best = 5)
+finalfit = predict(final, newdata = valid, type = "class")
+fconf = table(valid$good_bad, finalfit)
+
+
+plot(final)
+text(final, pretty=0)
+
+final_rate = 1 - (sum(diag(fconf)) / sum(fconf))
+final_rate
+
+
+### naive bayes ########################################
+#4
+
+nbayes = naiveBayes(good_bad ~., data = train)
+nbayes
+
+nbayes_yfit = predict(nbayes, newdata = valid)
+
+table(nbayes_yfit, valid$good_bad)
+
+nbay_msrate = 1 - sum(diag(table(nbayes_yfit, valid$good_bad))) / sum(table(nbayes_yfit, valid$good_bad))
+
+
+#5 use pi principle for both models, TPR and FPR, and plot correspoding ROC 
+
+
+
+threshold = seq(0.05, 0.95, 0.05)
+
+models_matrix = matrix(0,nrow = length(valid$good_bad), ncol=length(threshold))
+scores_matrix = matrix(0, nrow = length(threshold), ncol = 4)
+colnames(scores_matrix) = c("TPR_tree", "FPR_tree", "TPR_bayes", "FPR_bayes")
+
+best_tree = prune.tree(t, best = 5)
+tree_fit = predict(final, newdata = valid, type = "vector") # get probs
+bayes_fit = predict(nbayes, newdata = valid, type = "raw") # raw isnt on prob scale it looks more like its cross entropy
+tree_preds = as.matrix(tree_fit) # matrix
+
+# for performance calcs
+P = sum(valid$good_bad == "good")
+N = sum(valid$good_bad == "bad")
+
+rates <- function(pred, gold){
+  TP = 0
+  FP = 0
+  i = 1
+  for(i in seq(1:length(pred))){
+    if(pred[i] == gold[i] && pred[i] == "good"){
+      TP = TP + 1
+    }
+    if(pred[i] != gold[i] && pred[i] == "good"){
+      FP = FP + 1
+    }
+    i = i + 1
+  }
+  TPR = TP / P
+  FPR = FP / N
+  # compare and calc tpr, fpr 
+  return(c(TPR,FPR))
+
+  
+}
+
+c = 1
+for(t in threshold){
+  class_vec = ifelse(tree_preds[,2] > t, "good","bad")
+  bayes_class = ifelse(bayes_fit[,2] > t, "good", "bad")
+  
+  r_tree = rates(class_vec, valid$good_bad)
+  r_bay = rates(bayes_class, valid$good_bad)
+  scores_matrix[c,] = c(r_tree[1], r_tree[2], r_bay[1], r_bay[2])
+  c = c + 1
+}
+
+
+# plot ROC 
+roc_df = as.data.frame(scores_matrix)
+tree_df = roc_df[roc_df$model == "tree",][,2:3]
+bayes_df = roc_df[roc_df$model == "N_bayes",][,2:3]
+
+ggplot(roc_df, aes(x = roc_df$FPR_tree, y  = roc_df$TPR_tree, col = "tree")) + geom_line() +
+  geom_line(aes(x = roc_df$FPR_bayes, y = roc_df$TPR_bayes, col = "bayes"))
+
+# 6. loss matrix don't get it 
+# I would get classes and during confusion I would add * 10 to wrongly bad
+bayes_fit[,2] / bayes_fit[,1] > 10
+
+
+
+```
+
+```{r Assignment 3}
+```
+
+
+```{r Assignment 4}
+library("fastICA")
+data = read.csv2("NIRSpectra.csv") 
+
+data$Viscosity = c()
+
+res = prcomp(data)
+
+lambda=res$sdev^2
+#eigenvals
+lambda
+#proportion of var
+sprintf("%2.3f", lambda/sum(lambda)*100)
+screeplot(res)
+
+U = res$rotation # this is loadings
+head(U)
+plot(res$x[,1], res$x[,2], ylim=c(-5,15)) # do we need a second dim??
+
+# trace plot of loadings??
+
+plot(U[,1], main="traceplot, PC1") # almost all donw to 100 den a little spike after
+plot(U[,2], main="traceplot, PC2") # the final ones that the first dont take
+
+set.seed(12345)
+
+#mix signlas then seperate with fasICA 
+
+ica = fastICA(data, n.comp = 2)
+
+
+w_prim = ica$K %*% ica$W
+
+#trace plots
+plot(w_prim[,1], main = " traceplot, ica1")
+plot(w_prim[,2], main = " traceplot, ica2")
+
+plot(w_prim[,1],w_prim[,2])
+plot(U[,1], U[,2])
+
+```
+

@@ -1,0 +1,23 @@
+---
+title: "lab3"
+author: "Shahin Salehi"
+date: "7/24/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r Assignment 1}
+library("geosphere")
+
+stations = read.csv("stations.csv")
+
+
+
+```
+
+
