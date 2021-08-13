@@ -1,0 +1,140 @@
+---
+title: "exam_20180111"
+author: "Shahin Salehi"
+date: "8/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r exam assignment 1}
+# with and without scaling the features
+#how many components?
+# explain why so few can capture so much
+
+set.seed(12345)
+data = read.csv("video.csv")
+n = dim(data)[1]
+id = sample(1:n, floor(0.5 * n))
+train = data[id,]
+test = data[-id,]
+
+# remove utime dim per instruction
+data$utime=c()
+
+# remove codec since its not numeric
+data$codec = c()
+
+# PCA WITH SCALING
+
+# apply PCA
+pcares = prcomp(data)
+# lambda vals
+lambda = pcares$sdev^2
+# eigenvals 
+lambda
+# variation
+sprintf("%2.3f", lambda/sum(lambda) * 100)
+#built in function that displays PCA variation
+screeplot(pcares)
+
+#variation
+pca_scale = prcomp(scale(data))
+s_lambda = pca_scale$sdev^2
+
+
+sprintf("%2.3f", cumsum(lambda)/sum(lambda) * 100)
+
+sprintf("%2.3f", cumsum(s_lambda)/sum(s_lambda) * 100)
+
+#for case 1 
+arr =  cumsum(lambda)/sum(lambda) * 100
+min(which(arr >= 95))
+
+#for case 2
+arr = cumsum(s_lambda)/ sum(s_lambda) * 100
+min(which(arr >= 95))
+
+##### 
+# 3 use pcr model with M = 8 ?
+
+```
+
+```{r ass1 p4}
+library(ggplot2)
+library(MASS)
+set.seed(12345)
+data = read.csv("video.csv")
+
+data$class = ifelse(data$codec == "mpeg4", "mpeg", "other")
+
+ggplot(data = data, aes(x = duration, y = frames, col=class)) + geom_point()
+
+# yes you can sepetare them given the plot 
+
+s_data = data
+s_data$codec = c()
+
+s_data =scale(s_data[1:ncol(s_data)-1])
+
+s_data$class = data$class
+
+# split
+
+n = dim(data)[1]
+id = sample(1:n, floor(0.5 * n))
+train = data[id,]
+test = data[-id,]
+
+model = lda(class ~ frames + duration, data = s_data)
+preds = predict(model, type="class")
+
+
+ggplot(data = s_data, aes(x = duration, y = frames, col = predict(model, type="class")$class)) + geom_point()
+
+table(preds$class, s_data$class)
+
+model$means
+
+mod2 = glm(as.factor(class) ~ frames + duration, data = s_data, family = "binomial")
+
+
+glm_preds = mod2$y
+
+glm_preds = ifelse(glm_preds == 1, "other", "mpeg")
+
+table(glm_preds,  s_data$class)
+
+#completely naild it byeeee normal w/e tryna fit 
+
+# its not linearly seperable
+
+
+# 6 now do a tree xD 
+
+library(tree)
+
+tree = tree(as.factor(class) ~ frames + duration, data = s_data)
+cvtree = cv.tree(tree)
+
+plot(cvtree$size, cvtree$dev, type="b", col="red")
+
+print(cvtree)
+plot(cvtree)
+
+plot(tree)
+text(tree)
+```
+
+
+```{r assignment2 svms}
+
+
+
+```
+
+
